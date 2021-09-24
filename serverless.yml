@@ -1,0 +1,46 @@
+service: citationAutoBot
+useDotenv: true
+configValidationMode: error
+frameworkVersion: '>= 2.50.0'
+
+provider:
+  region: "eu-central-1"
+  lambdaHashingVersion: "20201221"
+  name: aws
+  runtime: go1.x
+  logRetentionInDays:
+  endpointType: regional
+  tracing: # 
+    apiGateway: true
+    lambda: true
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Resource: "*"
+          Action:
+            - "xray:*"
+
+package:
+  patterns:
+    - "bin/webhook"
+    - "bin/stopwords.txt"
+
+functions:
+  webhook: 
+    handler: bin/webhook
+    timeout: 15
+    description: simple echo bot
+    memorySize: 128 
+    environment:
+      BOT_TOKEN: ${env:BOT_TOKEN}
+      REPOST_CHANNEL_ID: ${env:REPOST_CHANNEL_ID}
+      STOPWORDS_S3_BUCKET: citation-shared-bucket
+      STOPWORDS_S3_KEY: stopwords.txt
+    events:
+      - http:
+          path: /webhook
+          method: ANY
+          cors: false
+          authorizer:
+            type: aws_iam
