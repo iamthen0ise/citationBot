@@ -19,6 +19,9 @@ make deploy
 ```
 
 ## Config
+
+Populate a text file with stop words, and deploy it onto S3.
+
 Create .env file and set variables:
 ```shell
 BOT_TOKEN=<Telegram bot token>

@@ -24,7 +24,6 @@ provider:
 package:
   patterns:
     - "bin/webhook"
-    - "bin/stopwords.txt"
 
 functions:
   webhook: 
@@ -35,8 +34,8 @@ functions:
     environment:
       BOT_TOKEN: ${env:BOT_TOKEN}
       REPOST_CHANNEL_ID: ${env:REPOST_CHANNEL_ID}
-      STOPWORDS_S3_BUCKET: citation-shared-bucket
-      STOPWORDS_S3_KEY: stopwords.txt
+      STOPWORDS_S3_BUCKET: ${env:STOPWORDS_S3_BUCKET}
+      STOPWORDS_S3_KEY: ${env:STOPWORDS_S3_KEY}
     events:
       - http:
           path: /webhook

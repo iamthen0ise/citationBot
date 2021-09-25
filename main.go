@@ -52,7 +52,7 @@ type BotResponse struct {
 	DisableNotification bool   `json:"disable_notification"`
 }
 
-func createChannelPost(targetId int64, text string, token string) {
+func createChannelPost(targetId int64, text string, token string) bool {
 	client := http.Client{}
 
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
@@ -82,6 +82,7 @@ func createChannelPost(targetId int64, text string, token string) {
 			log.Panic(err, bodyString)
 		}
 	}
+	return true
 }
 
 func readStopWords(s3Bucket string, s3Key string) ([]string, error) {
@@ -110,11 +111,31 @@ func readStopWords(s3Bucket string, s3Key string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+func findTextAndSubmit(stopwords []string, groupMessage GroupMessage, repostChannelId int64, token string) bool {
+	created := false
+
+	for _, stopword := range stopwords {
+		if strings.Contains(strings.ToLower(groupMessage.Message.Text), strings.ToLower(stopword)) {
+			created = createChannelPost(int64(repostChannelId), groupMessage.Message.Text, token)
+		}
+	}
+	return created
+}
+
 func main() {
 	lambda.Start(func(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-		s3Bucket, _ := os.LookupEnv("STOPWORDS_S3_BUCKET")
-		s3Key, _ := os.LookupEnv("STOPWORDS_S3_KEY")
-		stopwords, _ := readStopWords(s3Bucket, s3Key)
+		s3Bucket, ok := os.LookupEnv("STOPWORDS_S3_BUCKET")
+		if !ok {
+			log.Panic("Can't read STOPWORDS_S3_BUCKET")
+		}
+		s3Key, ok := os.LookupEnv("STOPWORDS_S3_KEY")
+		if !ok {
+			log.Panic("Can't read STOPWORDS_S3_KEY")
+		}
+		stopwords, err := readStopWords(s3Bucket, s3Key)
+		if err != nil {
+			log.Panic("Can't read Stopwords")
+		}
 
 		token, ok := os.LookupEnv("BOT_TOKEN")
 		if !ok {
@@ -134,13 +155,7 @@ func main() {
 		var groupMessage GroupMessage
 		json.Unmarshal([]byte(req.Body), &groupMessage)
 
-		for _, stopword := range stopwords {
-			if strings.Contains(strings.ToLower(groupMessage.Message.Text), strings.ToLower(stopword)) {
-				createChannelPost(int64(repostChannelId), groupMessage.Message.Text, token)
-				break
-			}
-
-		}
+		findTextAndSubmit(stopwords, groupMessage, repostChannelId, token)
 
 		return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 	})
