@@ -111,7 +111,7 @@ func readStopWords(s3Bucket string, s3Key string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func findTextAndSubmit(stopwords []string, groupMessage GroupMessage, repostChannelId int64, token string) bool {
+func findStopwordsAndSend(stopwords []string, groupMessage GroupMessage, repostChannelId int64, token string) bool {
 	created := false
 
 	for _, stopword := range stopwords {
@@ -155,7 +155,7 @@ func main() {
 		var groupMessage GroupMessage
 		json.Unmarshal([]byte(req.Body), &groupMessage)
 
-		findTextAndSubmit(stopwords, groupMessage, repostChannelId, token)
+		findStopwordsAndSend(stopwords, groupMessage, repostChannelId, token)
 
 		return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 	})
