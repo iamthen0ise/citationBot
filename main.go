@@ -131,29 +131,35 @@ func main() {
 		s3Bucket, ok := os.LookupEnv("STOPWORDS_S3_BUCKET")
 		if !ok {
 			log.Panic("Can't read STOPWORDS_S3_BUCKET")
+			return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 		}
 		s3Key, ok := os.LookupEnv("STOPWORDS_S3_KEY")
 		if !ok {
 			log.Panic("Can't read STOPWORDS_S3_KEY")
+			return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 		}
 		stopwords, err := readStopWords(s3Bucket, s3Key)
 		if err != nil {
-			log.Panic("Can't read Stopwords")
+			log.Panic("Can't read from Stopwords file")
+			return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 		}
 
 		token, ok := os.LookupEnv("BOT_TOKEN")
 		if !ok {
+			log.Panic("Can't read BOT_TOKEN")
 			return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 		}
 
 		repostChannel, ok := os.LookupEnv("REPOST_CHANNEL_ID")
 		if !ok {
+			log.Panic("Can't read REPOST_CHANNEL_ID")
 			return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 		}
 
 		repostChannelId, err := strconv.ParseInt(repostChannel, 10, 64)
 		if err != nil {
-			panic("Can't convert Repost Channel ID to int")
+			log.Panic("Can't convert Repost Channel ID to int")
+			return events.APIGatewayProxyResponse{Body: "ok", StatusCode: 200}, nil
 		}
 
 		var groupMessage GroupMessage
