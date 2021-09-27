@@ -114,6 +114,10 @@ func readStopWords(s3Bucket string, s3Key string) ([]string, error) {
 func findStopwordsAndSend(stopwords []string, groupMessage GroupMessage, repostChannelId int64, token string) bool {
 	created := false
 
+	if repostChannelId == groupMessage.Message.Chat.Id {
+		return false
+	}
+
 	for _, stopword := range stopwords {
 		if strings.Contains(strings.ToLower(groupMessage.Message.Text), strings.ToLower(stopword)) {
 			created = createChannelPost(int64(repostChannelId), groupMessage.Message.Text, token)
